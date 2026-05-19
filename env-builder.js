@@ -2487,40 +2487,21 @@ $('clearAll').onclick = () => {
 };
 $('applyImport').onclick = () => {
   try {
-    applyObj(parseEnv($('importText').value), true);
-    showToast('Imported ✓');
+    const parsed = parseEnv($('importText').value);
+    const count = Object.keys(parsed).length;
+    if (!count) {
+      showToast('No valid env keys found');
+      return;
+    }
+    applyObj(parsed, true);
+    showToast(`Imported ${count} key${count > 1 ? 's' : ''} ✓`);
   } catch (e) {
     showToast('Import failed');
     alert(e.message);
   }
 };
 
-// Auto-import: paste karo aur turant parse + apply ho jaata hai
-$('importText').addEventListener('paste', () => {
-  setTimeout(() => {
-    try {
-      const val = $('importText').value.trim();
-      if (!val) return;
-      applyObj(parseEnv(val), true);
-      showToast('Auto-imported ✓');
-    } catch (e) {
-      showToast('Import failed');
-    }
-  }, 0);
-});
-
-// Live typing: jaise jaise type karo env format mein, bundle banta jaata hai
-$('importText').addEventListener('input', () => {
-  const val = $('importText').value.trim();
-  if (!val) return;
-  // Sirf agar valid env/bundle format lag raha ho tabhi auto-apply
-  const looksLikeEnv = val.includes('=') || val.startsWith('{') || /^[A-Za-z0-9_\-]{20,}$/.test(val);
-  if (looksLikeEnv) {
-    try {
-      applyObj(parseEnv(val), true);
-    } catch (e) { /* silent — user abhi type kar raha hai */ }
-  }
-});
+// Import is explicit via the Import & Apply button to avoid surprising UI resets.
 $('addCustom').onclick = () => addCustomRow();
 $('applyBundle').onclick = () => {
   try {
