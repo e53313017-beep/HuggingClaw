@@ -511,11 +511,7 @@ inject_provider_models_from_env "github-copilot" "GITHUB_COPILOT_MODELS" "COPILO
 BROWSER_EXECUTABLE_PATH=""
 for candidate in /usr/bin/chromium /usr/bin/chromium-browser /snap/bin/chromium; do
   if [ -x "$candidate" ]; then
-    # Reject snap stubs — they silently fail in Docker
     if file "$candidate" 2>/dev/null | grep -q "ELF"; then
-      BROWSER_EXECUTABLE_PATH="$candidate"
-      break
-    elif head -1 "$candidate" 2>/dev/null | grep -qv "snap\|exec"; then
       BROWSER_EXECUTABLE_PATH="$candidate"
       break
     fi
@@ -783,7 +779,13 @@ fi
 if [ -n "${CLOUDFLARE_PROXY_URL:-}" ]; then
   echo "Proxy     : ${CLOUDFLARE_PROXY_URL}"
 fi
-RUNTIME_JUPYTER_ENABLED="$DEV_MODE_ENABLED"
+# HUGGINGCLAW_JUPYTER_ENABLED env var se override allow karo
+# (env-builder "Enable Jupyter terminal" toggle yahi set karta hai)
+if hc_is_true "${HUGGINGCLAW_JUPYTER_ENABLED:-false}"; then
+  RUNTIME_JUPYTER_ENABLED=true
+else
+  RUNTIME_JUPYTER_ENABLED="$DEV_MODE_ENABLED"
+fi
 # Add user bin to PATH for jupyter-lab (installed in Dockerfile when DEV_MODE=true)
 export PATH="$HOME/.local/bin:$PATH"
 
@@ -1583,6 +1585,16 @@ start_guardian_once() {
   echo "WhatsApp Guardian started (PID: $GUARDIAN_PID)"
 }
 
+# ── Start D-Bus session (once, before gateway loop) ──
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+  if command -v dbus-launch >/dev/null 2>&1; then
+    eval "$(dbus-launch --sh-syntax 2>/dev/null)" || true
+    export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-disabled:}"
+  else
+    export DBUS_SESSION_BUS_ADDRESS="disabled:"
+  fi
+fi
+
 while true; do
   # Check health-server process - restart if died unexpectedly
   if [ -n "${HEALTH_PID:-}" ] && ! kill -0 "$HEALTH_PID" 2>/dev/null; then
@@ -1611,16 +1623,6 @@ while true; do
   if [ "${AUTO_DOCTOR:-false}" = "true" ]; then
     openclaw doctor --fix || true
   fi
-  # ── Silence D-Bus errors for headless Chromium ──
-  if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    if command -v dbus-launch >/dev/null 2>&1; then
-      eval "$(dbus-launch --sh-syntax 2>/dev/null)" || true
-      export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-disabled:}"
-    else
-      export DBUS_SESSION_BUS_ADDRESS="disabled:"
-    fi
-  fi
-
   echo "Launching OpenClaw gateway on port 7860..."
 
   GATEWAY_ARGS=(gateway run --port 7860 --bind lan)

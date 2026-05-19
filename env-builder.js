@@ -851,21 +851,11 @@ const FIELDS = [
     "g": "Core",
     "icon": "⚡",
     "k": "JUPYTER_TOKEN",
-    "lbl": "Jupyter access token",
+    "lbl": "Jupyter access token (Must NOT be 'huggingface'. Run: openssl rand -hex 32)",
     "type": "password",
-    "ph": "huggingface",
+    "ph": "change_this_to_a_strong_token",
     "common": 1,
     "tag": "credential"
-  },
-{
-    "g": "Core",
-    "icon": "⚡",
-    "k": "KEEP_ALIVE_INTERVAL",
-    "lbl": "Keep-alive ping interval (seconds)",
-    "type": "number",
-    "ph": "300",
-    "common": 1,
-    "tag": "advanced"
   },
 {
     "g": "Core",
@@ -974,24 +964,6 @@ const FIELDS = [
     "type": "text",
     "ph": "/home/node",
     "tag": "advanced"
-  },
-{
-    "g": "Backup",
-    "icon": "💾",
-    "k": "WORKSPACE_GIT_USER",
-    "lbl": "Workspace git author email",
-    "type": "text",
-    "ph": "openclaw@example.com",
-    "tag": "optional"
-  },
-{
-    "g": "Backup",
-    "icon": "💾",
-    "k": "WORKSPACE_GIT_NAME",
-    "lbl": "Workspace git author name",
-    "type": "text",
-    "ph": "OpenClaw Bot",
-    "tag": "optional"
   },
 {
     "g": "Provider Keys",
